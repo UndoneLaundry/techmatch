@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Technician Dashboard | TechMatch{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h2 class="h4 mb-1">Technician Dashboard</h2>
+      <div class="text-muted small">
+        {% if tech %}{{ tech.full_name }}{% endif %}
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{{ url_for('technician.search_page') }}">Find Jobs</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('technician.profile') }}">Profile</a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category in ['error','danger'] else category }} mb-3" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Active Jobs -->
+  <div class="card mb-4">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">Active Jobs</div>
+        <span class="badge text-bg-primary">{{ active_jobs|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if active_jobs %}
+        <div class="row g-3">
+          {% for j in active_jobs %}
+            <div class="col-12 col-lg-6">
+              <div class="border rounded p-3 h-100 bg-light">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="fw-semibold">{{ j.title }}</div>
+                    <div class="text-muted small">{{ j.service_category }}{% if j.location %} • {{ j.location }}{% endif %}</div>
+                  </div>
+                  <span class="badge text-bg-success">ACTIVE</span>
+                </div>
+                {% if j.description %}<p class="mb-2 mt-2">{{ j.description }}</p>{% endif %}
+                <div class="small text-muted mb-2">
+                  Rate: ${{ j.hourly_rate_min }}–${{ j.hourly_rate_max }}/hr
+                </div>
+
+                <button class="btn btn-sm btn-outline-success" type="button"
+                        onclick="markComplete({{ j.id }})">
+                  Mark Complete
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No active jobs right now.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Completed Jobs -->
+  <div class="card mb-4">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">Completed Jobs</div>
+        <span class="badge text-bg-secondary">{{ completed_jobs|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if completed_jobs %}
+        <div class="row g-3">
+          {% for j in completed_jobs %}
+            <div class="col-12 col-lg-6">
+              <div class="border rounded p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="fw-semibold">{{ j.title }}</div>
+                    <div class="text-muted small">{{ j.service_category }}{% if j.location %} • {{ j.location }}{% endif %}</div>
+                  </div>
+                  <span class="badge text-bg-dark">COMPLETED</span>
+                </div>
+                {% if j.description %}<p class="mb-0 mt-2">{{ j.description }}</p>{% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No completed jobs yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recommended Jobs -->
+  <div class="card">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">Recommended Jobs</div>
+        <span class="badge text-bg-warning">{{ recommended_jobs|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if recommended_jobs %}
+        <div class="row g-3">
+          {% for j in recommended_jobs %}
+            <div class="col-12 col-lg-6">
+              <div class="border rounded p-3 h-100 bg-light">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="fw-semibold">{{ j.title if j.title is defined else ('Job #' ~ j.id) }}</div>
+                    <div class="text-muted small">
+                      {{ j.service_category }}{% if j.location %} • {{ j.location }}{% endif %}
+                    </div>
+                  </div>
+                  <span class="badge text-bg-warning">RECOMMENDED</span>
+                </div>
+                {% if j.description is defined and j.description %}<p class="mb-2 mt-2">{{ j.description }}</p>{% endif %}
+                {% if j.hourly_rate_min is defined %}
+                  <div class="small text-muted mb-2">
+                    Rate: ${{ j.hourly_rate_min }}{% if j.hourly_rate_max is defined %}–${{ j.hourly_rate_max }}{% endif %}/hr
+                  </div>
+                {% endif %}
+
+                <button class="btn btn-sm btn-primary" type="button"
+                        onclick="openApplyModal({{ j.id }}, {{ (j.title|tojson) if j.title is defined else ('"Job #' ~ j.id ~ '"') }})">
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No recommendations right now.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sign up for job</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 text-muted small" id="applyJobTitle"></div>
+        <p class="mb-0">Confirm you want to sign up for this job.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmApplyBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+  {{ super() }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<script>
+  let _applyJobId = null;
+  const applyModalEl = document.getElementById('applyModal');
+  const applyModal = applyModalEl ? new bootstrap.Modal(applyModalEl) : null;
+
+  function openApplyModal(jobId, title){
+    _applyJobId = jobId;
+    const t = document.getElementById('applyJobTitle');
+    if (t) t.textContent = title || ('Job #' + jobId);
+    if (applyModal) applyModal.show();
+  }
+
+  async function applyToJob(jobId){
+    const resp = await fetch(`/technician/jobs/${jobId}/apply`, {method:'POST'});
+    if (resp.status === 201){
+      window.location.reload();
+      return;
+    }
+    if (resp.status === 409){
+      alert('You already signed up for this job.');
+      return;
+    }
+    alert('Could not sign up. Please try again.');
+  }
+
+  const confirmBtn = document.getElementById('confirmApplyBtn');
+  if (confirmBtn){
+    confirmBtn.addEventListener('click', function(){
+      if (!_applyJobId) return;
+      applyToJob(_applyJobId);
+    });
+  }
+
+  async function markComplete(jobId){
+    const resp = await fetch(`/technician/jobs/${jobId}/complete`, {method:'POST'});
+    if (resp.ok){
+      const data = await resp.json().catch(()=>({}));
+      if (data && data.success){
+        window.location.reload();
+      } else {
+        alert('Unable to mark complete.');
+      }
+    } else {
+      alert('Unable to mark complete.');
+    }
+  }
+</script>
+{% endblock %}

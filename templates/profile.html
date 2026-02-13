@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Profile | TechMatch{% endblock %}
+
+{% block extra_head %}
+{% if role == "TECHNICIAN" %}
+  <script src="{{ url_for('static', filename='js/skill_suggest.js') }}"></script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Profile</h1>
+    <div class="text-muted small">Update your information and manage skills.</div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('user.homepage') }}">Back to homepage</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card shadow-sm tm-card">
+      <div class="card-body p-4">
+        <h2 class="h6 mb-3">Basic information</h2>
+
+        <form method="post" action="{{ url_for('user.profile_update_post') }}">
+          {% if role == "TECHNICIAN" %}
+            <div class="mb-3">
+              <label class="form-label">Full name</label>
+              <input class="form-control" name="full_name" value="{{ tech.full_name if tech else '' }}" required maxlength="60">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Bio (optional)</label>
+              <textarea class="form-control" name="bio" rows="4">{{ tech.bio if tech and tech.bio else '' }}</textarea>
+            </div>
+          {% elif role == "BUSINESS" %}
+            <div class="mb-3">
+              <label class="form-label">Company name</label>
+              <input class="form-control" name="company_name" value="{{ biz.company_name if biz else '' }}" required maxlength="60">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Registration identifier</label>
+              <input class="form-control" name="registration_identifier" value="{{ biz.registration_identifier if biz else '' }}" required>
+            </div>
+          {% endif %}
+
+          <button class="btn btn-primary" type="submit">Save changes</button>
+        </form>
+
+        <hr class="my-4">
+
+        <h2 class="h6 mb-3">Security</h2>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('user.change_password_get') }}">Change password</a>
+      </div>
+    </div>
+  </div>
+
+  {% if role == "TECHNICIAN" %}
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm tm-card">
+      <div class="card-body p-4">
+        <h2 class="h6 mb-3">Skills</h2>
+
+        {% if skill_items and skill_items|length > 0 %}
+          <div class="list-group mb-3">
+            {% for s in skill_items %}
+              <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-semibold">{{ s.skill_name }}</div>
+                  <div class="text-muted small">Status: {{ s.status }}</div>
+                </div>
+                <span class="badge text-bg-secondary">{{ s.status }}</span>
+              </div>
+            {% endfor %}
+          </div>
+
+          {% if skill_docs and skill_docs|length > 0 %}
+            <div class="mt-2">
+              <div class="text-muted small mb-1">Skill certification docs</div>
+              {% for grp in skill_docs|groupby('skill_name') %}
+                <div class="mb-2">
+                  <div class="fw-semibold">{{ grp.grouper }}</div>
+                  <ul class="mb-0">
+                    {% for d in grp.list %}
+                      <li>
+                        {{ d.original_filename }}
+                        <a class="ms-2" href="{{ url_for('admin.download_skill_document', doc_id=d.id) }}">Download</a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% else %}
+          <p class="text-muted small mb-3">No skills yet.</p>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('user.technician_skill_submit_post') }}" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Add skill</label>
+            <input class="form-control" name="skill_name" id="skill_name" list="canonicalSkills" placeholder="Start typing a skill..." required>
+            <datalist id="canonicalSkills">
+              {% for s in canonical_skills %}
+                <option value="{{ s }}"></option>
+              {% endfor %}
+            </datalist>
+            <div class="form-text">Max 1 submission per request; approval handled by admin.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Skill certification docs (optional)</label>
+            <input class="form-control" name="cert_docs" type="file" multiple accept=".pdf,.docx">
+          </div>
+
+          <button class="btn btn-outline-primary w-100" type="submit">Submit skill for review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

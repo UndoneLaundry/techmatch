@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Homepage | TechMatch{% endblock %}
+
+{% block content %}
+<div class="tm-card tm-hero">
+  <h1 class="tm-title">Homepage</h1>
+  <p class="tm-subtitle">Welcome back. Use the menu below to continue.</p>
+
+  <div class="tm-actions">
+    <a class="tm-btn tm-btn-secondary" href="/notifications">Notifications</a>
+    <form method="post" action="/logout" style="margin:0;">
+      <button class="tm-btn tm-btn-primary" type="submit">Logout</button>
+    </form>
+  </div>
+</div>
+
+<div class="tm-card tm-section">
+  <h2 style="margin-top:0;">Quick overview</h2>
+  <p class="tm-muted" style="margin-top:6px;">
+    This is a UI shell. Your backend can inject job lists, active requests, and status summaries here without changing the layout.
+  </p>
+
+  {% if user %}
+    <div class="tm-divider"></div>
+    <p class="tm-muted" style="margin:0;">
+      Signed in as <strong>{{ user.email or user['email'] }}</strong>
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

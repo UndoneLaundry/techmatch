@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Review Skill | TechMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-0">Review skill</h1>
+    <div class="text-muted small">Skill: {{ skill.skill_name }} • User: {{ user.email }}</div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.skills_pending') }}">Back</a>
+</div>
+
+<div class="card shadow-sm tm-card mb-3">
+  <div class="card-body p-4">
+    <div class="fw-semibold mb-2">Supporting documents</div>
+    {% if docs and docs|length > 0 %}
+      <ul class="mb-0">
+        {% for d in docs %}
+          <li>
+            {{ d.original_filename }}
+            {% if d.file_extension == 'pdf' %}
+              <button class="btn btn-link btn-sm p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#pdfPrev{{ d.id }}" aria-expanded="false">Preview</button>
+            {% endif %}
+            <a class="ms-2" href="{{ url_for('admin.download_skill_document', doc_id=d.id) }}">Download</a>
+
+            {% if d.file_extension == 'pdf' %}
+              <div class="collapse mt-2" id="pdfPrev{{ d.id }}">
+                <div class="border rounded">
+                  <iframe src="{{ url_for('admin.view_skill_document', doc_id=d.id) }}" style="width:100%;height:600px;border:0;"></iframe>
+                </div>
+              </div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted small mb-0">No documents uploaded for this skill.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="d-flex gap-2">
+  <form method="post" action="{{ url_for('admin.skills_approve', skill_id=skill.id) }}" class="m-0">
+    <button class="btn btn-success" type="submit">Approve skill</button>
+  </form>
+
+  <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#rejectBox">Reject</button>
+</div>
+
+<div class="collapse mt-3" id="rejectBox">
+  <div class="card shadow-sm tm-card">
+    <div class="card-body p-4">
+      <form method="post" action="{{ url_for('admin.skills_reject', skill_id=skill.id) }}">
+        <label class="form-label">Reason (optional)</label>
+        <textarea class="form-control mb-2" name="reason" rows="3"></textarea>
+        <button class="btn btn-danger" type="submit">Confirm rejection</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

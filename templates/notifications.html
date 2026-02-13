@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Notifications | TechMatch{% endblock %}
+
+{% block content %}
+<div class="tm-card tm-hero">
+  <h1 class="tm-title">Notifications</h1>
+  <p class="tm-subtitle">Updates about verification, admin actions, and system messages.</p>
+
+  <div class="tm-actions">
+    <a class="tm-btn tm-btn-secondary" href="/homepage">Back to homepage</a>
+    <form method="post" action="/notifications/mark-read" style="margin:0;">
+      <button class="tm-btn tm-btn-primary" type="submit">Mark all as read</button>
+    </form>
+  </div>
+</div>
+
+<div class="tm-card tm-section">
+  {% if notifications %}
+    <table class="tm-table">
+      <thead>
+        <tr>
+          <th>Message</th>
+          <th>Status</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for n in notifications %}
+          <tr>
+            <td>
+              <a href="/notifications/go/{{ n.id if n.id is defined else n['id'] }}" class="tm-link">
+                {{ n.message or n['message'] }}
+              </a>
+            </td>
+            <td>
+              {% set read_val = (n.is_read if n.is_read is defined else n.get('is_read')) %}
+              {% if read_val %}
+                <span class="tm-badge approved">READ</span>
+              {% else %}
+                <span class="tm-badge pending">UNREAD</span>
+              {% endif %}
+            </td>
+            <td class="tm-muted">
+              {{ n.created_at or n.get('created_at','') }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="tm-muted" style="margin:0;">No notifications yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

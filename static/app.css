@@ -1,0 +1,6 @@
+/* Minimal custom styles (Bootstrap-first).
+   Keep this file tiny and only add rules that Bootstrap utilities cannot express. */
+
+.tm-card {
+  border-radius: 1rem;
+}

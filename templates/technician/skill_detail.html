@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Skill Details | TechMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-1">Skill details</h1>
+    <div class="text-muted small">View the status and documents for this skill submission.</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('notifications.notifications_list') }}">Back to notifications</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('user.profile_get') }}">Back to profile</a>
+  </div>
+</div>
+
+<div class="card shadow-sm tm-card mb-3">
+  <div class="card-body p-4">
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="text-muted small">Skill name</div>
+        <div class="fw-semibold">{{ skill.skill_name }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-muted small">Status</div>
+        {% set st = (skill.status or '') %}
+        {% if st == 'APPROVED' %}
+          <span class="badge bg-success">APPROVED</span>
+        {% elif st == 'REJECTED' %}
+          <span class="badge bg-danger">DENIED</span>
+        {% else %}
+          <span class="badge bg-warning text-dark">PENDING</span>
+        {% endif %}
+      </div>
+
+      {% if skill.rejection_reason %}
+      <div class="col-12">
+        <div class="text-muted small">Denial reason</div>
+        <div>{{ skill.rejection_reason }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm tm-card">
+  <div class="card-body p-4">
+    <h2 class="h6 mb-3">Certificates (PDF/DOCX)</h2>
+    {% if docs %}
+      <ul class="list-group">
+        {% for d in docs %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">{{ d.original_filename }}</div>
+              <div class="text-muted small">Uploaded: {{ d.uploaded_at }}</div>
+            </div>
+            <a class="btn btn-sm btn-primary" href="/admin/skills/documents/download/{{ d.id }}">Download</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="text-muted">No documents found for this skill.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

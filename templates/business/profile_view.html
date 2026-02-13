@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Business Profile | TechMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-1">Business profile</h1>
+    <div class="text-muted small">Your saved business details.</div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('user.homepage') }}">Back</a>
+</div>
+
+<div class="card shadow-sm tm-card">
+  <div class="card-body p-4">
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="text-muted small">Company name</div>
+        <div class="fw-semibold">{{ profile.company_name }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-muted small">Registration</div>
+        <div class="fw-semibold">{{ profile.registration_identifier }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

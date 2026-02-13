@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Request Account | TechMatch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-10">
+    <div class="card shadow-sm tm-card mb-4">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-1">Create an account request</h1>
+        <p class="text-muted mb-0">
+          Choose a role to continue. All Technician and Business accounts require admin approval.
+        </p>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <a class="text-decoration-none" href="{{ url_for('request.technician_signup_get') }}">
+          <div class="card shadow-sm tm-card h-100">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h2 class="h5 mb-1">Technician</h2>
+                  <p class="text-muted mb-0">Offer repair services and get matched to jobs.</p>
+                </div>
+                <span class="badge text-bg-primary">TECH</span>
+              </div>
+              <div class="mt-3">
+                <span class="btn btn-primary btn-sm">Continue</span>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <a class="text-decoration-none" href="{{ url_for('request.business_signup_get') }}">
+          <div class="card shadow-sm tm-card h-100">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h2 class="h5 mb-1">Business</h2>
+                  <p class="text-muted mb-0">Post jobs and hire verified technicians.</p>
+                </div>
+                <span class="badge text-bg-success">BIZ</span>
+              </div>
+              <div class="mt-3">
+                <span class="btn btn-success btn-sm">Continue</span>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <a class="link-secondary" href="{{ url_for('auth.login_get') }}">Back to login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

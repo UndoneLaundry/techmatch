@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Review Request | TechMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-0">Review request #{{ req.id }}</h1>
+    <div class="text-muted small">Role: {{ req.user_role }} • Status: {{ req.status }}</div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.homepage') }}">Back</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card shadow-sm tm-card">
+      <div class="card-body p-4">
+        <h2 class="h6 mb-3">Submitted information</h2>
+
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted">Email</dt>
+          <dd class="col-sm-8">{{ user.email }}</dd>
+
+          {% if req.user_role == 'TECHNICIAN' %}
+            <dt class="col-sm-4 text-muted">Full name</dt>
+            <dd class="col-sm-8">{{ user.full_name }}</dd>
+          {% else %}
+            <dt class="col-sm-4 text-muted">Company name</dt>
+            <dd class="col-sm-8">{{ user.company_name }}</dd>
+
+            <dt class="col-sm-4 text-muted">Registration</dt>
+            <dd class="col-sm-8">{{ user.registration_identifier }}</dd>
+          {% endif %}
+        </dl>
+
+        <hr class="my-3">
+
+        <h2 class="h6 mb-2">Uploaded documents</h2>
+        {% if docs and docs|length > 0 %}
+          <ul class="mb-0">
+            {% for d in docs %}
+              <li>
+                {{ d.original_filename }}
+                {% if d.file_extension == 'pdf' %}
+                  <button class="btn btn-link btn-sm p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#pdfPrev{{ d.id }}" aria-expanded="false">Preview</button>
+                {% endif %}
+                <a class="ms-2" href="{{ url_for('admin.download_document', doc_id=d.id) }}">Download</a>
+
+                {% if d.file_extension == 'pdf' %}
+                  <div class="collapse mt-2" id="pdfPrev{{ d.id }}">
+                    <div class="border rounded">
+                      <iframe src="{{ url_for('admin.view_document', doc_id=d.id) }}" style="width:100%;height:600px;border:0;"></iframe>
+                    </div>
+                  </div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small mb-0">No documents found.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm tm-card">
+      <div class="card-body p-4">
+        <h2 class="h6 mb-3">Flags</h2>
+        {% if flags and flags|length > 0 %}
+          <ul class="mb-3">
+            {% for f in flags %}
+              <li><span class="badge text-bg-secondary">{{ f.severity }}</span> {{ f.flag_type }} — <span class="text-muted">{{ f.description }}</span></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small">No flags.</p>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+          <form method="post" action="{{ url_for('admin.approve', request_id=req.id) }}" class="m-0">
+            <button class="btn btn-success" type="submit">Approve</button>
+          </form>
+
+          <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#rejectBox" aria-expanded="false">Reject</button>
+        </div>
+
+        <div class="collapse mt-3" id="rejectBox">
+          <form method="post" action="{{ url_for('admin.reject', request_id=req.id) }}">
+            <label class="form-label">Rejection reason (optional)</label>
+            <textarea class="form-control mb-2" name="reason" rows="3"></textarea>
+            <button class="btn btn-danger" type="submit">Confirm rejection</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Find Jobs | TechMatch{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h2 class="h4 mb-1">Find Jobs</h2>
+      <div class="text-muted small">Browse available jobs and sign up.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('technician.dashboard') }}">Back to Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Centered search bar (content area, not navbar) -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-12 col-md-8 col-lg-6">
+      <input
+        id="jobSearchInput"
+        type="search"
+        class="form-control"
+        placeholder="Search by job category..."
+        aria-label="Search by job category"
+      />
+    </div>
+  </div>
+
+  <div class="row g-3" id="jobsGrid">
+    {% for j in jobs %}
+      <div class="col-12 col-lg-6">
+        <div class="card h-100 job-card" data-search="{{ (j.service_category ~ ' ' ~ j.title ~ ' ' ~ (j.location or ''))|lower }}">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <h3 class="h6 mb-1">{{ j.title }}</h3>
+                <div class="text-muted small">{{ j.service_category }}{% if j.location %} • {{ j.location }}{% endif %}</div>
+              </div>
+              <span class="badge text-bg-info">{{ j.status }}</span>
+            </div>
+
+            {% if j.description %}<p class="mt-2 mb-2">{{ j.description }}</p>{% endif %}
+
+            <div class="small text-muted mb-3">
+              Rate: ${{ j.hourly_rate_min }}–${{ j.hourly_rate_max }}/hr
+            </div>
+
+            {% if j.id in applied_job_ids %}
+              <button class="btn btn-sm btn-outline-secondary" type="button" disabled>Already Signed Up</button>
+            {% else %}
+              <button class="btn btn-sm btn-primary" type="button"
+                      onclick="openApplyModal({{ j.id }}, {{ j.title|tojson }})">
+                Sign Up
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="col-12">
+        <div class="text-muted">No jobs available.</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sign up for job</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 text-muted small" id="applyJobTitle"></div>
+        <p class="mb-0">Confirm you want to sign up for this job.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmApplyBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<script>
+  let _applyJobId = null;
+  const applyModalEl = document.getElementById('applyModal');
+  const applyModal = applyModalEl ? new bootstrap.Modal(applyModalEl) : null;
+
+  function openApplyModal(jobId, title){
+    _applyJobId = jobId;
+    const t = document.getElementById('applyJobTitle');
+    if (t) t.textContent = title || ('Job #' + jobId);
+    if (applyModal) applyModal.show();
+  }
+
+  async function applyToJob(jobId){
+    const resp = await fetch(`/technician/jobs/${jobId}/apply`, {method:'POST'});
+    if (resp.status === 201){
+      window.location.reload();
+      return;
+    }
+    if (resp.status === 409){
+      alert('You already signed up for this job.');
+      return;
+    }
+    alert('Could not sign up. Please try again.');
+  }
+
+  const confirmBtn = document.getElementById('confirmApplyBtn');
+  if (confirmBtn){
+    confirmBtn.addEventListener('click', function(){
+      if (!_applyJobId) return;
+      applyToJob(_applyJobId);
+    });
+  }
+
+  // Client-side filter (keeps backend routing/SQL unchanged)
+  const searchInput = document.getElementById('jobSearchInput');
+  if (searchInput){
+    searchInput.addEventListener('input', function(){
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const cards = document.querySelectorAll('.job-card');
+      cards.forEach((card) => {
+        const hay = (card.getAttribute('data-search') || '');
+        const show = !q || hay.includes(q);
+        // toggle at column level for clean grid spacing
+        const col = card.closest('.col-12');
+        if (col) col.style.display = show ? '' : 'none';
+      });
+    });
+  }
+</script>
+{% endblock %}
