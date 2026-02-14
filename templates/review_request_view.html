@@ -30,8 +30,8 @@
             <dt class="col-sm-4 text-muted">Registration</dt>
             <dd class="col-sm-8">{{ user.registration_identifier }}</dd>
           {% endif %}
-
-          <hr class="my-3">
+        
+        <hr class="my-3">
 
         {% if req.user_role == 'TECHNICIAN' %}
           <dt class="col-sm-4 text-muted">Bio</dt>
@@ -55,19 +55,14 @@
             {% for d in docs %}
               <li>
                 {{ d.original_filename }}
-                {% if d.file_extension == 'pdf' %}
-                  <button class="btn btn-link btn-sm p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#pdfPrev{{ d.id }}" aria-expanded="false">Preview</button>
-                {% endif %}
-                <a class="ms-2" href="{{ url_for('admin.download_document', doc_id=d.id) }}">Download</a>
+<a class="ms-2" href="{{ url_for('admin.download_document', doc_id=d.id) }}">Download</a>
 
                 {% if d.file_extension == 'pdf' %}
-                  <div class="collapse mt-2" id="pdfPrev{{ d.id }}">
-                    <div class="border rounded">
-                      <iframe src="{{ url_for('admin.view_document', doc_id=d.id) }}" style="width:100%;height:600px;border:0;"></iframe>
-                    </div>
+                  <div class="mt-2 border rounded">
+                    <iframe src="{{ url_for('admin.view_document', doc_id=d.id) }}" style="width:100%;height:600px;border:0;"></iframe>
                   </div>
                 {% endif %}
-              </li>
+</li>
             {% endfor %}
           </ul>
         {% else %}
@@ -91,22 +86,7 @@
           <p class="text-muted small">No flags.</p>
         {% endif %}
 
-        <div class="d-flex gap-2">
-          <form method="post" action="{{ url_for('admin.approve', request_id=req.id) }}" class="m-0">
-            <button class="btn btn-success" type="submit">Approve</button>
-          </form>
-
-          <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#rejectBox" aria-expanded="false">Reject</button>
-        </div>
-
-        <div class="collapse mt-3" id="rejectBox">
-          <form method="post" action="{{ url_for('admin.reject', request_id=req.id) }}">
-            <label class="form-label">Rejection reason (optional)</label>
-            <textarea class="form-control mb-2" name="reason" rows="3"></textarea>
-            <button class="btn btn-danger" type="submit">Confirm rejection</button>
-          </form>
-        </div>
-      </div>
+        
     </div>
   </div>
 </div>

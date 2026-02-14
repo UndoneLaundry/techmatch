@@ -2,6 +2,13 @@
 {% block title %}Business Preview | TechMatch{% endblock %}
 
 {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-1">Preview (Technician view)</h1>
+    <div class="text-muted small">How your profile appears to technicians.</div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('user.homepage') }}">Back</a>
+</div>
 
 <div class="card shadow-sm tm-card">
   <div class="card-body p-4">

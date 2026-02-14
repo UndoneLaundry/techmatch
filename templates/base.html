@@ -32,7 +32,18 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {% if session and session.get('user_id') %}
             {% if session.get('role') == 'ADMIN' %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.homepage') }}">Admin Homepage</a></li>
+              <li class="nav-item">
+            <a class="nav-link {% if request.path.startswith('/admin/homepage') %}active{% endif %}" href="{{ url_for('admin.homepage') }}">Admin Homepage</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path.startswith('/admin/technicians') %}active{% endif %}" href="{{ url_for('admin.admin_technicians') }}">Technician Listing</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path.startswith('/admin/businesses') %}active{% endif %}" href="{{ url_for('admin.admin_businesses') }}">Business Listing</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path.startswith('/admin/audit-logs') %}active{% endif %}" href="{{ url_for('admin.audit_logs') }}">Audit Logs</a>
+          </li>
             {% else %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('user.homepage') }}">Homepage</a></li>
               {% if session.get('role') == 'TECHNICIAN' %}

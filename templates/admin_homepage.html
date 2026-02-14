@@ -9,6 +9,51 @@
   </div>
 </div>
 
+<div class="mb-3 position-relative" style="max-width: 520px;">
+  <input type="text" id="dashboardSearch" class="form-control" placeholder="Search for name..." autocomplete="off">
+  <div id="dashboardSuggestions" class="list-group position-absolute w-100 shadow" style="z-index: 1000;"></div>
+</div>
+
+<script>
+(function(){
+  const input = document.getElementById("dashboardSearch");
+  const box = document.getElementById("dashboardSuggestions");
+  let timer = null;
+
+  function clearBox(){ box.innerHTML = ""; }
+
+  input.addEventListener("input", function() {
+    const q = this.value.trim();
+    clearTimeout(timer);
+    if (!q) { clearBox(); return; }
+
+    // small debounce for nicer UX
+    timer = setTimeout(() => {
+      fetch(`{{ url_for('admin.admin_technician_search') }}?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(items => {
+          clearBox();
+          items.forEach(it => {
+            const a = document.createElement("a");
+            a.href = `/admin/review/${it.request_id}`;
+            a.className = "list-group-item list-group-item-action";
+            a.textContent = it.name;
+            box.appendChild(a);
+          });
+        })
+        .catch(()=>clearBox());
+    }, 120);
+  });
+
+  // close suggestions on click outside
+  document.addEventListener("click", (e) => {
+    if (!box.contains(e.target) && e.target !== input) clearBox();
+  });
+})();
+</script>
+
+
+
 <div class="row g-3 mb-3">
   <div class="col-6 col-md-3">
     <div class="card shadow-sm tm-card"><div class="card-body">

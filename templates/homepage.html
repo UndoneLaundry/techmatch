@@ -1,3 +1,45 @@
+
+<div class="mb-4 position-relative">
+    <input type="text"
+           id="dashboardSearch"
+           class="form-control"
+           placeholder="Search technician by name...">
+    <div id="dashboardSuggestions"
+         class="list-group position-absolute w-100 shadow"></div>
+</div>
+
+<script>
+const dashboardInput = document.getElementById("dashboardSearch");
+const dashboardSuggestions = document.getElementById("dashboardSuggestions");
+
+dashboardInput.addEventListener("input", function() {
+    const query = this.value;
+
+    if (query.length === 0) {
+        dashboardSuggestions.innerHTML = "";
+        return;
+    }
+
+    fetch(`/admin/technicians/search?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+            dashboardSuggestions.innerHTML = "";
+
+            data.forEach(item => {
+                const option = document.createElement("a");
+                option.classList.add("list-group-item", "list-group-item-action");
+                option.textContent = item.name;
+
+                option.onclick = () => {
+                    window.location.href =
+                        `/admin/technicians?q=${item.name}`;
+                };
+
+                dashboardSuggestions.appendChild(option);
+            });
+        });
+});
+</script>
 {% extends "base.html" %}
 {% block title %}Homepage | TechMatch{% endblock %}
 

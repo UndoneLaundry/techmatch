@@ -1,3 +1,45 @@
+
+<div class="mb-4 position-relative">
+    <input type="text"
+           id="dashboardSearch"
+           class="form-control"
+           placeholder="Search technician by name...">
+    <div id="dashboardSuggestions"
+         class="list-group position-absolute w-100 shadow"></div>
+</div>
+
+<script>
+const dashboardInput = document.getElementById("dashboardSearch");
+const dashboardSuggestions = document.getElementById("dashboardSuggestions");
+
+dashboardInput.addEventListener("input", function() {
+    const query = this.value;
+
+    if (query.length === 0) {
+        dashboardSuggestions.innerHTML = "";
+        return;
+    }
+
+    fetch(`/admin/technicians/search?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+            dashboardSuggestions.innerHTML = "";
+
+            data.forEach(item => {
+                const option = document.createElement("a");
+                option.classList.add("list-group-item", "list-group-item-action");
+                option.textContent = item.name;
+
+                option.onclick = () => {
+                    window.location.href =
+                        `/admin/technicians?q=${item.name}`;
+                };
+
+                dashboardSuggestions.appendChild(option);
+            });
+        });
+});
+</script>
 {% extends "base.html" %}
 {% block title %}Business Homepage | TechMatch{% endblock %}
 
@@ -27,6 +69,7 @@
         <div class="fw-semibold">Quick actions</div>
         <div class="d-flex flex-wrap gap-2 mt-3">
           <a class="btn btn-success btn-sm" href="{{ url_for('business.profile_preview') }}">View public profile</a>
+          <a class="btn btn-outline-success btn-sm" href="{{ url_for('business.profile_preview') }}">Preview (Technician view)</a>
         </div>
       </div>
     </div>
