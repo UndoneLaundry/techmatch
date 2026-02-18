@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Technician Homepage | TechMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Technician Homepage</h1>
+    <div class="text-muted small">View and manage your public profile.</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('user.profile_get') }}">Edit profile</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm tm-card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Unread notifications</div>
+        <div class="display-6 mb-0">{{ unread_notifications|length if unread_notifications else 0 }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-8">
+    <div class="card shadow-sm tm-card h-100">
+      <div class="card-body">
+        <div class="fw-semibold">Quick actions</div>
+        <div class="text-muted small">Common tasks</div>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <a class="btn btn-outline-primary btn-sm" href="{{ url_for('technician.dashboard_page') }}">Dashboard</a>
+          <a class="btn btn-outline-primary btn-sm" href="{{ url_for('technician.search_page') }}">Find Jobs</a>
+          <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('technician.profile_preview') }}">View public profile</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

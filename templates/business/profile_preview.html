@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Business Preview | TechMatch{% endblock %}
+
+{% block content %}
+
+<div class="card shadow-sm tm-card">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-1">{{ profile.company_name }}</h2>
+    <div class="text-muted">Registration: {{ profile.registration_identifier }}</div>
+
+    <hr class="my-3">
+
+    <div class="fw-semibold mb-2">Documents</div>
+    {% if ver_docs and ver_docs|length > 0 %}
+      <ul class="mb-0">
+        {% for d in ver_docs %}
+          <li>
+            {{ d.original_filename }}
+            <a class="ms-2" href="{{ url_for('admin.download_document', doc_id=d.id) }}">Download</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted small mb-0">—</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

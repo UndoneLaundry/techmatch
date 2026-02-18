@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Business Dashboard | TechMatch{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h2 class="h4 mb-1">Business Dashboard</h2>
+      <div class="text-muted small">Overview of your jobs and activity.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{{ url_for('business.create_job') }}">+ New Job</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('business.profile_preview') }}">Profile</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="border rounded p-3 bg-light h-100">
+        <div class="text-muted small mb-1">Total Jobs</div>
+        <div class="fw-bold fs-3">{{ stats.total or 0 }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="border rounded p-3 bg-light h-100">
+        <div class="text-muted small mb-1">Open</div>
+        <div class="fw-bold fs-3">{{ stats.outgoing or 0 }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="border rounded p-3 bg-light h-100">
+        <div class="text-muted small mb-1">In Progress</div>
+        <div class="fw-bold fs-3">{{ stats.active or 0 }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="border rounded p-3 bg-light h-100">
+        <div class="text-muted small mb-1">Completed</div>
+        <div class="fw-bold fs-3">{{ stats.completed or 0 }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="card">
+    <div class="card-header bg-white">
+      <div class="fw-semibold">Quick Actions</div>
+    </div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('business.list_jobs') }}" class="btn btn-outline-secondary">View All Jobs</a>
+        <a href="{{ url_for('business.list_jobs', status='PENDING_CONFIRMATION') }}" class="btn btn-outline-secondary">Pending Approval</a>
+        <a href="{{ url_for('business.profile_preview') }}" class="btn btn-outline-secondary">View Public Profile</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

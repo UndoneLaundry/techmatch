@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Job Applications | TechMatch{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('business.dashboard') }}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('business.list_jobs') }}">Jobs</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('business.job_detail', job_id=job.id) }}">{{ job.title }}</a></li>
+      <li class="breadcrumb-item active">Applications</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h2 class="h4 mb-1">Applications</h2>
+      <div class="text-muted small">{{ job.title }}</div>
+    </div>
+    <a href="{{ url_for('business.job_detail', job_id=job.id) }}" class="btn btn-outline-secondary">Back to Job</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">Pending Applications</div>
+        <span class="badge text-bg-secondary">{{ applications|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if applications %}
+        <div class="row g-3">
+          {% for app in applications %}
+          <div class="col-12 col-lg-6">
+            <div class="border rounded p-3 h-100">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div>
+                  <div class="fw-semibold">{{ app.full_name or 'No name provided' }}</div>
+                  <div class="text-muted small">{{ app.email }}</div>
+                  <div class="text-muted small">Applied: {{ app.applied_at }}</div>
+                </div>
+                <span class="badge text-bg-primary">APPLIED</span>
+              </div>
+              <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-sm btn-outline-secondary approve-btn" data-app-id="{{ app.id }}">
+                  Approve
+                </button>
+                <button class="btn btn-sm btn-outline-secondary deny-btn" data-app-id="{{ app.id }}">
+                  Deny
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No pending applications for this job.</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.approve-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (!confirm('Approve this application? The job will become active and this technician will be assigned.')) return;
+    const appId = btn.dataset.appId;
+    const res = await fetch(`/business/jobs/{{ job.id }}/applications/${appId}/approve`, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    if (res.ok) {
+      location.reload();
+    } else {
+      const data = await res.json();
+      alert('Error: ' + (data.error || 'Unknown error'));
+    }
+  });
+});
+
+document.querySelectorAll('.deny-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (!confirm('Deny this application?')) return;
+    const appId = btn.dataset.appId;
+    const res = await fetch(`/business/jobs/{{ job.id }}/applications/${appId}/deny`, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    if (res.ok) {
+      location.reload();
+    } else {
+      const data = await res.json();
+      alert('Error: ' + (data.error || 'Unknown error'));
+    }
+  });
+});
+</script>
+{% endblock %}
+{% endblock %}

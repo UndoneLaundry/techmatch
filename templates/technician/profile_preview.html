@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}View Profile | TechMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-1">View Profile Preview</h1>
+    <div class="text-muted small">How your profile appears to businesses.</div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('user.homepage') }}">Back</a>
+</div>
+
+<div class="card shadow-sm tm-card mb-3">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-1">{{ profile.full_name }}</h2>
+    <div class="text-muted">{{ profile.bio or "No bio provided." }}</div>
+  </div>
+</div>
+
+<div class="row g-3">
+  {# Determine which skills are visible on this preview page (hide rejected skills). #}
+  {% set visible_skill_names = [] %}
+  {% if skills %}
+    {% for s in skills %}
+      {% if (s.status|string|lower) != 'rejected' %}
+        {% set _ = visible_skill_names.append(s.skill_name) %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm tm-card h-100">
+      <div class="card-body p-4">
+        <div class="fw-semibold mb-2">Skills</div>
+        {% if skills and skills|length > 0 %}
+          <ul class="mb-0">
+            {% for s in skills %}
+              {% if (s.status|string|lower) != 'rejected' %}
+                <li>
+                  <span class="fw-semibold">{{ s.skill_name }}</span>
+                  <span class="text-muted small">({{ s.status }})</span>
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+          {% if visible_skill_names|length == 0 %}
+            <p class="text-muted small mb-0">No skills listed.</p>
+          {% endif %}
+        {% else %}
+          <p class="text-muted small mb-0">No skills listed.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm tm-card h-100">
+      <div class="card-body p-4">
+        <div class="fw-semibold mb-2">Documents</div>
+
+        <div class="text-muted small">Verification documents</div>
+        {% if ver_docs and ver_docs|length > 0 %}
+          <ul>
+            {% for d in ver_docs %}
+              <li>
+                {{ d.original_filename }}
+                <a class="ms-2" href="{{ url_for('admin.download_document', doc_id=d.id) }}">Download</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small">—</p>
+        {% endif %}
+
+        <div class="text-muted small">Skill documents</div>
+        {% if skill_docs and skill_docs|length > 0 %}
+          {% for grp in skill_docs|groupby('skill_name') %}
+            {% if grp.grouper in visible_skill_names %}
+            <div class="mt-2">
+              <div class="fw-semibold">{{ grp.grouper }}</div>
+              <ul class="mb-0">
+                {% for d in grp.list %}
+                  <li>
+                    {{ d.original_filename }}
+                    <a class="ms-2" href="{{ url_for('admin.download_skill_document', doc_id=d.id) }}">Download</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <p class="text-muted small mb-0">—</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

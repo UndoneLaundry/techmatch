@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Admin Homepage | TechMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Admin homepage</h1>
+    <div class="text-muted small">Review account requests and pending skills.</div>
+  </div>
+</div>
+
+<div class="mb-3 position-relative" style="max-width: 520px;">
+  <input type="text" id="dashboardSearch" class="form-control" placeholder="Search for name..." autocomplete="off">
+  <div id="dashboardSuggestions" class="list-group position-absolute w-100 shadow" style="z-index: 1000;"></div>
+</div>
+
+<script>
+(function(){
+  const input = document.getElementById("dashboardSearch");
+  const box = document.getElementById("dashboardSuggestions");
+  let timer = null;
+
+  function clearBox(){ box.innerHTML = ""; }
+
+  input.addEventListener("input", function() {
+    const q = this.value.trim();
+    clearTimeout(timer);
+    if (!q) { clearBox(); return; }
+
+    // small debounce for nicer UX
+    timer = setTimeout(() => {
+      fetch(`{{ url_for('admin.admin_technician_search') }}?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(items => {
+          clearBox();
+          items.forEach(it => {
+            const a = document.createElement("a");
+            a.href = `/admin/review/${it.request_id}`;
+            a.className = "list-group-item list-group-item-action";
+            a.textContent = it.name;
+            box.appendChild(a);
+          });
+        })
+        .catch(()=>clearBox());
+    }, 120);
+  });
+
+  // close suggestions on click outside
+  document.addEventListener("click", (e) => {
+    if (!box.contains(e.target) && e.target !== input) clearBox();
+  });
+})();
+</script>
+
+
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <div class="card shadow-sm tm-card"><div class="card-body">
+      <div class="text-muted small">Approved</div>
+      <div class="h4 mb-0">{{ approved_count }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card shadow-sm tm-card"><div class="card-body">
+      <div class="text-muted small">Rejected</div>
+      <div class="h4 mb-0">{{ rejected_count }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card shadow-sm tm-card"><div class="card-body">
+      <div class="text-muted small">Technicians</div>
+      <div class="h4 mb-0">{{ tech_count }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card shadow-sm tm-card"><div class="card-body">
+      <div class="text-muted small">Businesses</div>
+      <div class="h4 mb-0">{{ biz_count }}</div>
+    </div></div>
+  </div>
+</div>
+
+<ul class="nav nav-tabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">Pending requests</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#skills" type="button" role="tab">Pending skills <span class="badge text-bg-secondary">{{ pending_skills|length }}</span></button>
+  </li>
+</ul>
+
+<div class="tab-content border border-top-0 bg-white p-3 rounded-bottom shadow-sm">
+  <div class="tab-pane fade show active" id="pending" role="tabpanel">
+    {% if pending and pending|length > 0 %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Role</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in pending %}
+              <tr>
+                <td class="font-monospace">{{ r.id }}</td>
+                <td>{{ r.user_role }}</td>
+                <td>{{ r.email }}</td>
+                <td><span class="badge text-bg-warning">PENDING</span></td>
+                <td class="text-muted small">{{ r.submitted_at }}</td>
+                <td class="text-end">
+                  <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.review_request', request_id=r.id) }}">Review</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">No pending requests.</p>
+    {% endif %}
+  </div>
+
+  <div class="tab-pane fade" id="skills" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="fw-semibold">Pending skill submissions</div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.skills_pending') }}">Open list</a>
+    </div>
+    {% if pending_skills and pending_skills|length > 0 %}
+      <ul class="list-group">
+        {% for s in pending_skills %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">{{ s.skill_name }}</div>
+              <div class="text-muted small">User: {{ s.user_email }}</div>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.skills_review', skill_id=s.id) }}">Review</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted mb-0">No pending skills.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

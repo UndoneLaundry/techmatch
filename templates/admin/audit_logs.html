@@ -1,0 +1,75 @@
+
+{% extends "base.html" %}
+{% block title %}Audit Logs | Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h4 mb-1">Audit Logs</h1>
+      <div class="text-muted small">Actions recorded from admin approvals and key system activity.</div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-3">
+      <div class="card shadow-sm tm-card">
+        <div class="card-body">
+          <div class="fw-semibold mb-2">Filter</div>
+          <div class="list-group">
+            <a class="list-group-item list-group-item-action {% if actor=='all' %}active{% endif %}"
+               href="{{ url_for('admin.audit_logs', actor='all') }}">All</a>
+            <a class="list-group-item list-group-item-action {% if actor=='admin' %}active{% endif %}"
+               href="{{ url_for('admin.audit_logs', actor='admin') }}">Admin</a>
+            <a class="list-group-item list-group-item-action {% if actor=='business' %}active{% endif %}"
+               href="{{ url_for('admin.audit_logs', actor='business') }}">Business</a>
+            <a class="list-group-item list-group-item-action {% if actor=='technician' %}active{% endif %}"
+               href="{{ url_for('admin.audit_logs', actor='technician') }}">Technician</a>
+          </div>
+
+          <div class="text-muted small mt-3">
+            Showing most recent events.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-9">
+      <div class="card shadow-sm tm-card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="min-width:170px;">Timestamp (UTC)</th>
+                  <th style="width:120px;">Actor</th>
+                  <th style="min-width:200px;">Actor name</th>
+                  <th style="min-width:220px;">Action</th>
+                  <th style="min-width:120px;">Target ID</th>
+                  <th style="min-width:260px;">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for e in events %}
+                  <tr>
+                    <td class="text-muted small">{{ fmt_ts(e.ts) }}</td>
+                    <td><span class="badge text-bg-dark">{{ e.actor_role }}</span></td>
+                    <td class="small">{{ e.actor_name or '-' }}</td>
+                    <td class="small fw-semibold">{{ e.action }}</td>
+                    <td class="small">{{ e.target_id or '-' }}</td>
+                    <td class="small text-muted">{{ e.details or '-' }}</td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No audit events found.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

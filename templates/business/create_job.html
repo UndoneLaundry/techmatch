@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Create Job | TechMatch{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h2 class="h4 mb-1">Create New Job</h2>
+      <div class="text-muted small">Fill in the details to post a new job listing.</div>
+    </div>
+    <a href="{{ url_for('business.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header bg-white">
+      <div class="fw-semibold">Job Information</div>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        <div class="mb-3">
+          <label for="title" class="form-label">Job Title</label>
+          <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="service_category" class="form-label">Service Category</label>
+          <select class="form-select" id="service_category" name="service_category" required>
+            <option value="">-- Select --</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label for="hourly_rate_min" class="form-label">Hourly Rate Min ($)</label>
+            <input type="number" class="form-control" id="hourly_rate_min" name="hourly_rate_min" min="1" required>
+          </div>
+          <div class="col-6">
+            <label for="hourly_rate_max" class="form-label">Hourly Rate Max ($)</label>
+            <input type="number" class="form-control" id="hourly_rate_max" name="hourly_rate_max" min="1" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="location" class="form-label">Location <span class="text-muted small">(optional)</span></label>
+          <input type="text" class="form-control" id="location" name="location">
+        </div>
+        <div class="mb-4">
+          <label for="estimated_duration" class="form-label">Estimated Duration <span class="text-muted small">(optional, in days)</span></label>
+          <input type="number" class="form-control" id="estimated_duration" name="estimated_duration" min="1" placeholder="e.g. 3">
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Create Job</button>
+          <a href="{{ url_for('business.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

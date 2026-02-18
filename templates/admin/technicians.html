@@ -1,0 +1,121 @@
+
+{% extends "base.html" %}
+{% block title %}Technician Listing | Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h4 mb-1">Technician Listing</h1>
+      <div class="text-muted small">Approved / active technicians. Current job will appear when assigned.</div>
+    </div>
+    {% if q %}
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_technicians') }}">Clear search</a>
+    {% endif %}
+  </div>
+
+  
+  <div class="d-flex gap-2 mb-3">
+    <a class="btn btn-sm {% if status=='approved' %}btn-primary{% else %}btn-outline-primary{% endif %}"
+       href="{{ url_for('admin.admin_technicians', status='approved') }}">Approved</a>
+    <a class="btn btn-sm {% if status=='rejected' %}btn-primary{% else %}btn-outline-primary{% endif %}"
+       href="{{ url_for('admin.admin_technicians', status='rejected') }}">Rejected</a>
+  </div>
+
+  <div class="card shadow-sm tm-card">
+    <div class="card-body">
+      
+      <div class="table-responsive">
+        {% if status == 'rejected' %}
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="min-width:240px;">Name</th>
+                <th style="min-width:220px;">Email</th>
+                <th style="min-width:320px;">Reason for rejection</th>
+                <th class="text-end" style="width:140px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in technicians %}
+                <tr>
+                  <td class="fw-semibold">{{ t.technician_name }}</td>
+                  <td class="text-muted">{{ t.email }}</td>
+                  <td class="small">{{ t.rejection_reason or '—' }}</td>
+                  <td class="text-end">
+                    {% if t.latest_verification_request_id %}
+                      <a class="btn btn-sm btn-outline-primary"
+                         href="{{ url_for('admin.review_view', request_id=t.latest_verification_request_id) }}">
+                        Review
+                      </a>
+                    {% else %}
+                      <span class="text-muted small">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="4" class="text-center text-muted py-4">No rejected technicians found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="min-width:220px;">Technician name</th>
+                <th style="min-width:220px;">Email</th>
+                <th style="min-width:260px;">Job description</th>
+                <th style="min-width:180px;">Job status</th>
+                <th class="text-end" style="width:120px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in technicians %}
+                <tr>
+                  <td class="fw-semibold">{{ t.technician_name }}</td>
+                  <td class="text-muted">{{ t.email }}</td>
+                  <td>
+                    {% if t.job_description %}
+                      <div class="small">{{ t.job_description }}</div>
+                      {% if t.job_title %}
+                        <div class="text-muted small">({{ t.job_title }})</div>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if t.job_status %}
+                      <span class="badge text-bg-primary">{{ t.job_status }}</span>
+                      {% if t.job_updated_at %}
+                        <div class="text-muted small mt-1">Updated {{ fmt_ts(t.job_updated_at) }} UTC</div>
+                      {% endif %}
+                    {% else %}
+                      <span class="badge text-bg-secondary">No active job</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if t.latest_verification_request_id %}
+                      <a class="btn btn-sm btn-outline-primary"
+                         href="{{ url_for('admin.review_view', request_id=t.latest_verification_request_id) }}">
+                        Review
+                      </a>
+                    {% else %}
+                      <span class="text-muted small">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">No technicians found.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

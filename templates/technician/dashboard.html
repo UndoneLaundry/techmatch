@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+{% block title %}Technician Dashboard | TechMatch{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h2 class="h4 mb-1">Technician Dashboard</h2>
+      <div class="text-muted small">
+        {% if tech %}{{ tech.full_name }}{% endif %}
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{{ url_for('technician.search_page') }}">Find Jobs</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('technician.profile') }}">Profile</a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category in ['error','danger'] else category }} mb-3" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Active Jobs -->
+  <div class="card mb-4">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">Active Jobs</div>
+        <span class="badge text-bg-primary">{{ active_jobs|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if active_jobs %}
+        <div class="row g-3">
+          {% for j in active_jobs %}
+            <div class="col-12 col-lg-6">
+              <div class="border rounded p-3 h-100 {% if j.status == 'pending_approval' %}bg-warning bg-opacity-10{% else %}bg-light{% endif %}">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="fw-semibold">{{ j.title }}</div>
+                    <div class="text-muted small">{{ j.service_category }}{% if j.location %} • {{ j.location }}{% endif %}</div>
+                  </div>
+                  {% if j.status == 'pending_approval' %}
+                    <span class="badge text-bg-warning">PENDING APPROVAL</span>
+                  {% else %}
+                    <span class="badge text-bg-success">ACTIVE</span>
+                  {% endif %}
+                </div>
+                {% if j.description %}<p class="mb-2 mt-2">{{ j.description|truncate(100) }}</p>{% endif %}
+                <div class="small text-muted mb-2">
+                  Rate: ${{ j.hourly_rate_min }}–${{ j.hourly_rate_max }}/hr
+                </div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-primary" type="button"
+                          onclick='viewJobDetails({{ j|tojson|safe }})'>
+                    View Details
+                  </button>
+                  {% if j.status == 'pending_approval' %}
+                    <button class="btn btn-sm btn-pending" type="button" disabled>
+                      Pending Approval
+                    </button>
+                  {% else %}
+                    <button class="btn btn-sm btn-outline-success mark-complete-btn" type="button"
+                            data-job-id="{{ j.id }}"
+                            data-job-title="{{ j.title }}"
+                            onclick="openCompleteModal(this)">
+                      Mark Complete
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No active jobs right now.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Completed Jobs -->
+  <div class="card mb-4">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">Completed Jobs</div>
+        <span class="badge text-bg-secondary">{{ completed_jobs|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if completed_jobs %}
+        <div class="row g-3">
+          {% for j in completed_jobs %}
+            <div class="col-12 col-lg-6">
+              <div class="border rounded p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="fw-semibold">{{ j.title }}</div>
+                    <div class="text-muted small">{{ j.service_category }}{% if j.location %} • {{ j.location }}{% endif %}</div>
+                  </div>
+                  <span class="badge text-bg-dark">COMPLETED</span>
+                </div>
+                {% if j.description %}<p class="mb-2 mt-2">{{ j.description|truncate(100) }}</p>{% endif %}
+                <button class="btn btn-sm btn-outline-primary" type="button"
+                        onclick='viewJobDetails({{ j|tojson|safe }})'>
+                  View Details
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No completed jobs yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recommended Jobs -->
+  <div class="card">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">Recommended Jobs</div>
+        <span class="badge text-bg-warning">{{ recommended_jobs|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if recommended_jobs %}
+        <div class="row g-3">
+          {% for j in recommended_jobs %}
+            <div class="col-12 col-lg-6">
+              <div class="border rounded p-3 h-100 bg-light">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="fw-semibold">{{ j.title if j.title is defined else ('Job #' ~ j.id) }}</div>
+                    <div class="text-muted small">
+                      {{ j.service_category }}{% if j.location %} • {{ j.location }}{% endif %}
+                    </div>
+                  </div>
+                  <span class="badge text-bg-warning">RECOMMENDED</span>
+                </div>
+                {% if j.description is defined and j.description %}<p class="mb-2 mt-2">{{ j.description|truncate(100) }}</p>{% endif %}
+                {% if j.hourly_rate_min is defined %}
+                  <div class="small text-muted mb-2">
+                    Rate: ${{ j.hourly_rate_min }}{% if j.hourly_rate_max is defined %}–${{ j.hourly_rate_max }}{% endif %}/hr
+                  </div>
+                {% endif %}
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-primary" type="button"
+                          onclick='viewJobDetails({{ j|tojson|safe }})'>
+                    View Details
+                  </button>
+                  <button class="btn btn-sm btn-primary" type="button"
+                          onclick='openApplyModal({{ j.id }}, {{ (j.title|tojson) if j.title is defined else ("Job #" ~ j.id)|tojson }})'>
+                    Sign Up
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No recommendations right now.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="applyModalLabel">Sign up for job</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 text-muted small" id="applyJobTitle"></div>
+        <p class="mb-0">Confirm you want to sign up for this job.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmApplyBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Job Confirmation Modal -->
+<div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="completeModalLabel">Mark Job Complete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 fw-semibold" id="completeJobTitle"></div>
+        <p class="mb-0">Are you sure you want to mark this job as complete? This will send it for approval.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">No</button>
+        <button type="button" class="btn btn-success" id="confirmCompleteBtn">Yes, Mark Complete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Job Details Modal -->
+<div class="modal fade" id="viewJobModal" tabindex="-1" aria-labelledby="viewJobModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewJobModalLabel">Job Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="viewJobContent">
+        <!-- Job details will be populated here -->
+        <div class="text-center py-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<style>
+/* Task list styling */
+.tasks-list {
+  margin-top: 1rem;
+}
+
+.task-item {
+  margin-bottom: 1.25rem;
+  padding-left: 1rem;
+  border-left: 3px solid #0d6efd;
+}
+
+.task-item:last-child {
+  margin-bottom: 0;
+}
+
+.task-title {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  color: #212529;
+}
+
+.task-description {
+  font-size: 0.9rem;
+  color: #6c757d;
+  line-height: 1.5;
+}
+
+/* Job section styling */
+.job-section {
+  margin-bottom: 2rem;
+}
+
+.job-section-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e9ecef;
+  color: #212529;
+}
+
+/* Info grid styling */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.info-item {
+  padding: 0.5rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-weight: 500;
+  font-size: 1rem;
+  color: #212529;
+}
+
+/* Description box styling */
+.description-box {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  line-height: 1.6;
+}
+
+/* Customer info styling */
+.customer-info {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.customer-field {
+  margin-bottom: 0.75rem;
+}
+
+.customer-field:last-child {
+  margin-bottom: 0;
+}
+
+.customer-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-bottom: 0.1rem;
+}
+
+.customer-value {
+  font-weight: 500;
+}
+
+/* Materials styling */
+.materials-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.material-tag {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+  padding: 0.35rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Pending approval button styling */
+.btn-pending {
+  background-color: #ffc107;
+  color: #000;
+  border-color: #ffc107;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.btn-pending:hover {
+  background-color: #ffc107;
+  color: #000;
+  border-color: #ffc107;
+}
+
+/* Pending approval card styling */
+.bg-warning.bg-opacity-10 {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  window.applyModal = new bootstrap.Modal(document.getElementById('applyModal'));
+  window.completeModal = new bootstrap.Modal(document.getElementById('completeModal'));
+  window.viewJobModal = new bootstrap.Modal(document.getElementById('viewJobModal'));
+});
+
+// Apply modal functions
+let _applyJobId = null;
+
+function openApplyModal(jobId, title){
+  _applyJobId = jobId;
+  const t = document.getElementById('applyJobTitle');
+  if (t) t.textContent = title || ('Job #' + jobId);
+  if (window.applyModal) {
+    window.applyModal.show();
+  }
+}
+
+async function applyToJob(jobId){
+  try {
+    const resp = await fetch(`/technician/jobs/${jobId}/apply`, {method:'POST'});
+    if (resp.status === 201){
+      window.location.reload();
+      return;
+    }
+    if (resp.status === 409){
+      alert('You already signed up for this job.');
+      return;
+    }
+    alert('Could not sign up. Please try again.');
+  } catch (error) {
+    alert('Network error. Please try again.');
+  }
+}
+
+// Confirm apply button
+const confirmBtn = document.getElementById('confirmApplyBtn');
+if (confirmBtn){
+  confirmBtn.addEventListener('click', function(){
+    if (!_applyJobId) return;
+    applyToJob(_applyJobId);
+  });
+}
+
+// Complete job functions
+let _currentJobButton = null;
+let _currentJobId = null;
+
+function openCompleteModal(buttonElement) {
+  _currentJobButton = buttonElement;
+  _currentJobId = buttonElement.getAttribute('data-job-id');
+  const jobTitle = buttonElement.getAttribute('data-job-title');
+  
+  const titleElement = document.getElementById('completeJobTitle');
+  if (titleElement) {
+    titleElement.textContent = jobTitle || ('Job #' + _currentJobId);
+  }
+  
+  if (window.completeModal) {
+    window.completeModal.show();
+  }
+}
+
+async function submitForApproval() {
+  if (!_currentJobId) return;
+  
+  try {
+    if (_currentJobButton) {
+      _currentJobButton.textContent = 'Submitting...';
+      _currentJobButton.disabled = true;
+    }
+    
+    const response = await fetch(`/technician/jobs/${_currentJobId}/request-approval`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const data = await response.json().catch(() => ({}));
+    
+    if (response.ok && data.success) {
+      alert('Job has been submitted for approval!');
+      window.location.reload();
+    } else {
+      if (_currentJobButton) {
+        _currentJobButton.textContent = 'Mark Complete';
+        _currentJobButton.disabled = false;
+      }
+      if (response.status === 404) {
+        alert('Job not found.');
+      } else if (response.status === 403) {
+        alert('You are not authorized to complete this job.');
+      } else {
+        alert(data.message || 'Failed to submit for approval. Please try again.');
+      }
+    }
+  } catch (error) {
+    if (_currentJobButton) {
+      _currentJobButton.textContent = 'Mark Complete';
+      _currentJobButton.disabled = false;
+    }
+    alert('Network error. Please check your connection and try again.');
+  }
+}
+
+// Confirm complete button
+const confirmCompleteBtn = document.getElementById('confirmCompleteBtn');
+if (confirmCompleteBtn) {
+  confirmCompleteBtn.addEventListener('click', function() {
+    if (window.completeModal) {
+      window.completeModal.hide();
+    }
+    submitForApproval();
+  });
+}
+
+// View job details function
+function viewJobDetails(jobData) {
+  try {
+    const job = typeof jobData === 'string' ? JSON.parse(jobData) : jobData;
+    
+    const modalTitle = document.getElementById('viewJobModalLabel');
+    const modalContent = document.getElementById('viewJobContent');
+    
+    if (!modalTitle || !modalContent) return;
+    
+    modalTitle.textContent = job.title || `Job #${job.id}`;
+    
+    // Status badge
+    let statusBadge = '';
+    if (job.status) {
+      let badgeClass = 'secondary';
+      const status = job.status.toLowerCase();
+      if (status === 'active') badgeClass = 'success';
+      else if (status === 'completed') badgeClass = 'dark';
+      else if (status === 'pending_confirmation' || status === 'pending_approval') badgeClass = 'warning';
+      statusBadge = `<span class="badge bg-${badgeClass} mb-3">${job.status.replace('_', ' ').toUpperCase()}</span>`;
+    }
+    
+    // Posted date from created_at
+    const postedDate = job.posted_date || job.created_at
+      ? new Date(job.posted_date || job.created_at).toLocaleDateString()
+      : 'N/A';
+
+    // Estimated duration from start_date / end_date (Unix seconds)
+    let estimatedDuration = 'Not specified';
+    if (job.start_date && job.end_date) {
+      const days = Math.round((job.end_date - job.start_date) / 86400);
+      estimatedDuration = days === 1 ? '1 day' : `${days} days`;
+    }
+    
+    // Real tasks only
+    const tasks = (job.tasks && job.tasks.length > 0) ? job.tasks : [];
+
+    // Tasks HTML
+    let tasksHtml = '';
+    if (tasks.length > 0) {
+      tasksHtml = `<div class="job-section"><div class="job-section-title">📋 Job Tasks</div><div class="tasks-list">`;
+      tasks.forEach((task, index) => {
+        const completedBadge = task.is_completed
+          ? `<span class="badge bg-success ms-2">Completed</span>`
+          : `<span class="badge bg-secondary ms-2">Pending</span>`;
+        tasksHtml += `<div class="task-item"><div class="task-title">${index + 1}. ${task.title}${completedBadge}</div></div>`;
+      });
+      tasksHtml += `</div></div>`;
+    } else {
+      tasksHtml = `<div class="job-section"><div class="job-section-title">📋 Job Tasks</div><p class="text-muted">No tasks have been added by the business yet.</p></div>`;
+    }
+    
+    modalContent.innerHTML = `
+      ${statusBadge}
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Category</div>
+          <div class="info-value">${job.service_category || 'N/A'}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Location</div>
+          <div class="info-value">${job.location || 'N/A'}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Rate</div>
+          <div class="info-value">$${job.hourly_rate_min || '0'}–$${job.hourly_rate_max || '0'}/hr</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Est. Duration</div>
+          <div class="info-value">${estimatedDuration}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Posted</div>
+          <div class="info-value">${postedDate}</div>
+        </div>
+      </div>
+      <div class="job-section">
+        <div class="job-section-title">📝 Description</div>
+        <div class="description-box">${job.description || 'No description provided.'}</div>
+      </div>
+      ${tasksHtml}
+    `;
+    
+    if (window.viewJobModal) {
+      window.viewJobModal.show();
+    } else {
+      const modalEl = document.getElementById('viewJobModal');
+      if (modalEl) {
+        window.viewJobModal = new bootstrap.Modal(modalEl);
+        window.viewJobModal.show();
+      }
+    }
+  } catch (error) {
+    alert('Error displaying job details. Please try again.');
+  }
+}
+</script>
+{% endblock %}

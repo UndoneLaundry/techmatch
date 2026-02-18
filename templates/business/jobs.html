@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}My Jobs | TechMatch{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h2 class="h4 mb-1">My Jobs</h2>
+      <div class="text-muted small">All jobs posted by your business.</div>
+    </div>
+    <a href="{{ url_for('business.create_job') }}" class="btn btn-outline-primary">+ New Job</a>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <a class="btn btn-sm {% if not current_filter %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+       href="{{ url_for('business.list_jobs') }}">All</a>
+    <a class="btn btn-sm {% if current_filter == 'OUTGOING' %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+       href="{{ url_for('business.list_jobs', status='OUTGOING') }}">Open</a>
+    <a class="btn btn-sm {% if current_filter == 'ACTIVE' %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+       href="{{ url_for('business.list_jobs', status='ACTIVE') }}">In Progress</a>
+    <a class="btn btn-sm {% if current_filter == 'PENDING_CONFIRMATION' %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+       href="{{ url_for('business.list_jobs', status='PENDING_CONFIRMATION') }}">Pending Approval</a>
+    <a class="btn btn-sm {% if current_filter == 'COMPLETED' %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+       href="{{ url_for('business.list_jobs', status='COMPLETED') }}">Completed</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">{{ current_filter.replace('_', ' ').title() if current_filter else 'All Jobs' }}</div>
+        <span class="badge text-bg-secondary">{{ jobs|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if jobs %}
+        <div class="row g-3">
+          {% for job in jobs %}
+          <div class="col-12 col-lg-6">
+            <div class="border rounded p-3 h-100">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <div>
+                  <div class="fw-semibold">{{ job.title }}</div>
+                  <div class="text-muted small">
+                    {{ job.service_category }}{% if job.location %} &bull; {{ job.location }}{% endif %}
+                  </div>
+                </div>
+                {% if job.status == 'COMPLETED' %}
+                  <span class="badge text-bg-dark">COMPLETED</span>
+                {% elif job.status == 'ACTIVE' %}
+                  <span class="badge text-bg-success">ACTIVE</span>
+                {% elif job.status == 'PENDING_CONFIRMATION' %}
+                  <span class="badge text-bg-warning">PENDING APPROVAL</span>
+                {% else %}
+                  <span class="badge text-bg-primary">OPEN</span>
+                {% endif %}
+              </div>
+              {% if job.description %}
+                <p class="mb-2 mt-2 small text-secondary">{{ job.description|truncate(100) }}</p>
+              {% endif %}
+              <div class="small text-muted mb-3">
+                Rate: ${{ job.hourly_rate_min }}&ndash;${{ job.hourly_rate_max }}/hr
+              </div>
+              <div class="d-flex gap-2">
+                <a href="{{ url_for('business.job_detail', job_id=job.id) }}"
+                   class="btn btn-sm btn-outline-primary">View Details</a>
+                {% if job.status == 'OUTGOING' %}
+                  <a href="{{ url_for('business.list_applications', job_id=job.id) }}"
+                     class="btn btn-sm btn-outline-secondary">Applications</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted">No jobs found.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

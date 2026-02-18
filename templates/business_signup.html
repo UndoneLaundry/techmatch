@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Business Signup | TechMatch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h1 class="h4 mb-0">Business account request</h1>
+        <div class="text-muted small">Fill in your details and submit for admin verification.</div>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('request.request_account_get') }}">Back</a>
+    </div>
+
+    <div class="card shadow-sm tm-card">
+      <div class="card-body p-4">
+        <form method="post" action="{{ url_for('request.request_business_post') }}" enctype="multipart/form-data">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Company name</label>
+              <input class="form-control" name="company_name" required maxlength="60">
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Registration identifier</label>
+              <input class="form-control" name="registration_identifier" required>
+              <div class="form-text">Format will be validated server-side.</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Email</label>
+              <input class="form-control" name="email" type="email" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Password</label>
+              <input class="form-control" name="password" type="password" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Supporting documents</label>
+              <input class="form-control" name="support_docs" type="file" multiple accept=".pdf,.docx" required>
+              <div class="form-text">Upload at least 1 document (.pdf or .docx).</div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-success" type="submit">Submit request</button>
+            <a class="btn btn-light" href="{{ url_for('auth.login_get') }}">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

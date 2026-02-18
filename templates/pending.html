@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Verification Status | TechMatch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm tm-card">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-2">Account verification</h1>
+
+        {% if not req %}
+          <p class="text-muted mb-3">You have not submitted a verification request yet.</p>
+          <a class="btn btn-primary" href="{{ url_for('request.request_account_get') }}">Submit request</a>
+
+        {% elif req["status"] == "PENDING" %}
+          <div class="alert alert-warning mb-3">
+            <div class="fw-semibold">Pending admin approval</div>
+            <div class="small">Your account request has been submitted and is awaiting review.</div>
+          </div>
+          <p class="text-muted mb-0">You can come back later. Once approved, you will be redirected to your homepage.</p>
+
+        {% elif req["status"] == "REJECTED" %}
+          <div class="alert alert-danger mb-3">
+            <div class="fw-semibold">Rejected</div>
+            {% if req["rejection_reason"] %}
+              <div class="small">Reason: {{ req["rejection_reason"] }}</div>
+            {% else %}
+              <div class="small">No reason provided.</div>
+            {% endif %}
+          </div>
+
+          {% if cooldown_active %}
+            <div class="alert alert-info">
+              <div class="fw-semibold">Cooldown active</div>
+              <div class="small">
+                Please wait before reapplying.
+                {% if cooldown_until_human %} You may try again after <span class="font-monospace">{{ cooldown_until_human }}</span>.{% endif %}
+              </div>
+            </div>
+          {% else %}
+            <a class="btn btn-primary" href="{{ url_for('request.request_account_get') }}">Reapply</a>
+          {% endif %}
+
+        {% else %}
+          <div class="alert alert-info mb-0">Unknown status.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
